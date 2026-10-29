@@ -102,12 +102,33 @@ void MostrarInventario()
 
 void BuscarProductoLineal(string codigoBuscado)
 {
-   
+    int comparaciones = 0;
+
+    for (int i = 0; i < codigo.Length; i++)
+    {
+        comparaciones++;
+
+        if (codigo[i] == codigoBuscado)
+        {
+            Console.WriteLine("\nPRODUCTO ENCONTRADO");
+            Console.WriteLine($"Codigo: {codigo[i]}");
+            Console.WriteLine($"Nombre: {nombre[i]}");
+            Console.WriteLine($"Categoria: {categoria[i]}");
+            Console.WriteLine($"Precio: ${precioUnitario[i]}");
+            Console.WriteLine($"Existencias: {existencias[i]}");
+            Console.WriteLine($"Comparaciones realizadas: {comparaciones}");
+
+            return;
+        }
+    }
+
+    Console.WriteLine("Producto no encontrado");
+    Console.WriteLine($"Comparaciones realizadas: {comparaciones}");
 }
 
 string PedirDatos(string mensaje)
 {
-    while (true) 
+    while (true)
     {
         Console.Write(mensaje);
         string entrada = (Console.ReadLine() ?? string.Empty).Trim().ToUpper();
@@ -139,7 +160,76 @@ DateTime PedirFecha(string mensaje)
 
 void BuscarProductoBinaria(string codigoBuscadoBinaria)
 {
-    throw new NotImplementedException();
+    OrdenarProductosPorCodigo();
+
+    int izquierda = 0;
+    int derecha = codigo.Length - 1;
+
+    int comparaciones = 0;
+
+    while (izquierda <= derecha)
+    {
+        comparaciones++;
+
+        int medio = (izquierda + derecha) / 2;
+
+        if (codigo[medio] == codigoBuscadoBinaria)
+        {
+            Console.WriteLine("\nPRODUCTO ENCONTRADO");
+            Console.WriteLine($"Código: {codigo[medio]}");
+            Console.WriteLine($"Nombre: {nombre[medio]}");
+            Console.WriteLine($"Categoría: {categoria[medio]}");
+            Console.WriteLine($"Precio: ${precioUnitario[medio]}");
+            Console.WriteLine($"Existencias: {existencias[medio]}");
+            Console.WriteLine($"Comparaciones realizadas: {comparaciones}");
+
+            return;
+        }
+
+        if (string.Compare(codigoBuscadoBinaria, codigo[medio]) > 0)
+        {
+            izquierda = medio + 1;
+        }
+        else
+        {
+            derecha = medio - 1;
+        }
+    }
+
+    Console.WriteLine("Producto no encontrado");
+    Console.WriteLine($"Comparaciones realizadas: {comparaciones}");
+}
+
+void OrdenarProductosPorCodigo()
+{
+    for (int i = 0; i < codigo.Length - 1; i++)
+    {
+    for (int j = 0; j < codigo.Length - 1 - i; j++)
+    {
+        if (string.Compare(codigo[j], codigo[j + 1]) > 0)
+        {
+        string auxCodigo = codigo[j];
+        codigo[j] = codigo[j + 1];
+        codigo[j + 1] = auxCodigo;
+
+            string auxNombre = nombre[j];
+            nombre[j] = nombre[j + 1];
+            nombre[j + 1] = auxNombre;
+
+        string auxCategoria = categoria[j];
+            categoria[j] = categoria[j + 1];
+            categoria[j + 1] = auxCategoria;
+
+            int auxPrecio = precioUnitario[j];
+            precioUnitario[j] = precioUnitario[j + 1];
+                precioUnitario[j + 1] = auxPrecio;
+
+            int auxExistencias = existencias[j];
+            existencias[j] = existencias[j + 1];
+                existencias[j + 1] = auxExistencias;
+        }
+        }
+    }
 }
 
 void BuscarFacturaLineal(string facturaBuscada)
