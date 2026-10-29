@@ -232,19 +232,278 @@ void OrdenarProductosPorCodigo()
     }
 }
 
+bool VentasSonConsistentes()
+{
+    int total = numeroFactura.Length;
+
+    return total > 0
+        && codigoProducto.Length == total
+        && cantidadVendida.Length == total
+        && fechaVenta.Length == total;
+}
+
+bool EsNumeroFacturaValido(string entrada, out int numero)
+{
+    numero = 0;
+
+    if (string.IsNullOrWhiteSpace(entrada))
+    {
+        return false;
+    }
+
+    if (!int.TryParse(entrada.Trim(), out numero))
+    {
+        return false;
+    }
+
+    return numero > 0;
+}
+
+int BuscarIndiceProducto(string codigoProd)
+{
+    for (int i = 0; i < codigo.Length; i++)
+    {
+        if (codigo[i] == codigoProd)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+string FormatearFilaVenta(string factura, string fecha, string codProd, string producto, string cantidad, string precio, string total)
+{
+    const int ANCHO_FACTURA = 9;
+    const int ANCHO_FECHA = 12;
+    const int ANCHO_CODIGO = 9;
+    const int ANCHO_PRODUCTO = 24;
+    const int ANCHO_CANTIDAD = 10;
+    const int ANCHO_PRECIO = 12;
+    const int ANCHO_TOTAL = 10;
+
+    return $"{factura,-ANCHO_FACTURA}{fecha,-ANCHO_FECHA}{codProd,-ANCHO_CODIGO}{producto,-ANCHO_PRODUCTO}{cantidad,-ANCHO_CANTIDAD}{precio,-ANCHO_PRECIO}{total,-ANCHO_TOTAL}";
+}
+
+void MostrarEncabezadoVentas()
+{
+    string encabezado = FormatearFilaVenta("Factura", "Fecha", "Código", "Producto", "Cantidad", "Precio ($)", "Total ($)");
+    string linea = new string('=', encabezado.Length);
+
+    Console.WriteLine(linea);
+    Console.WriteLine(encabezado);
+    Console.WriteLine(linea);
+}
+
+void MostrarFilaVenta(int indice)
+{
+    int indiceProducto = BuscarIndiceProducto(codigoProducto[indice]);
+
+    string nombreProducto = indiceProducto >= 0 ? nombre[indiceProducto] : "Desconocido";
+    int precio = indiceProducto >= 0 ? precioUnitario[indiceProducto] : 0;
+    int total = precio * cantidadVendida[indice];
+
+    Console.WriteLine(FormatearFilaVenta(
+        numeroFactura[indice].ToString(),
+        fechaVenta[indice].ToString("dd/MM/yyyy"),
+        codigoProducto[indice],
+        nombreProducto,
+        cantidadVendida[indice].ToString(),
+        precio.ToString(),
+        total.ToString()));
+}
+
+void MostrarVentaEncontrada(int indice, int comparaciones)
+{
+    Console.WriteLine("\nFACTURA ENCONTRADA");
+    MostrarEncabezadoVentas();
+    MostrarFilaVenta(indice);
+    Console.WriteLine($"Comparaciones realizadas: {comparaciones}\n");
+}
+
+void MostrarFacturaNoEncontrada(int comparaciones)
+{
+    Console.WriteLine("Factura no encontrada");
+    Console.WriteLine($"Comparaciones realizadas: {comparaciones}\n");
+}
+
+void IntercambiarVentas(int a, int b)
+{
+    int auxFactura = numeroFactura[a];
+    numeroFactura[a] = numeroFactura[b];
+    numeroFactura[b] = auxFactura;
+
+    string auxCodigoProducto = codigoProducto[a];
+    codigoProducto[a] = codigoProducto[b];
+    codigoProducto[b] = auxCodigoProducto;
+
+    int auxCantidad = cantidadVendida[a];
+    cantidadVendida[a] = cantidadVendida[b];
+    cantidadVendida[b] = auxCantidad;
+
+    DateTime auxFecha = fechaVenta[a];
+    fechaVenta[a] = fechaVenta[b];
+    fechaVenta[b] = auxFecha;
+}
+
+void OrdenarVentasPorFactura()
+{
+    if (!VentasSonConsistentes())
+    {
+        return;
+    }
+
+    for (int i = 0; i < numeroFactura.Length - 1; i++)
+    {
+        for (int j = 0; j < numeroFactura.Length - 1 - i; j++)
+        {
+            if (numeroFactura[j] > numeroFactura[j + 1])
+            {
+                IntercambiarVentas(j, j + 1);
+            }
+        }
+    }
+}
+
 void BuscarFacturaLineal(string facturaBuscada)
 {
-    throw new NotImplementedException();
+    if (!VentasSonConsistentes())
+    {
+        Console.WriteLine("Error: los datos de ventas no son válidos.\n");
+        return;
+    }
+
+    if (!EsNumeroFacturaValido(facturaBuscada, out int numeroBuscado))
+    {
+        Console.WriteLine("Número de factura inválido. Debe ser un entero positivo.\n");
+        return;
+    }
+
+    int comparaciones = 0;
+
+    for (int i = 0; i < numeroFactura.Length; i++)
+    {
+        comparaciones++;
+
+        if (numeroFactura[i] == numeroBuscado)
+        {
+            MostrarVentaEncontrada(i, comparaciones);
+            return;
+        }
+    }
+
+    MostrarFacturaNoEncontrada(comparaciones);
 }
 
 void BuscarFacturaBinaria(string FacturaBuscadaBinaria)
 {
-    throw new NotImplementedException();
+    if (!VentasSonConsistentes())
+    {
+        Console.WriteLine("Error: los datos de ventas no son válidos.\n");
+        return;
+    }
+
+    if (!EsNumeroFacturaValido(FacturaBuscadaBinaria, out int numeroBuscado))
+    {
+        Console.WriteLine("Número de factura inválido. Debe ser un entero positivo.\n");
+        return;
+    }
+
+    OrdenarVentasPorFactura();
+
+    int izquierda = 0;
+    int derecha = numeroFactura.Length - 1;
+    int comparaciones = 0;
+
+    while (izquierda <= derecha)
+    {
+        comparaciones++;
+
+        int medio = (izquierda + derecha) / 2;
+
+        if (numeroFactura[medio] == numeroBuscado)
+        {
+            MostrarVentaEncontrada(medio, comparaciones);
+            return;
+        }
+
+        if (numeroBuscado > numeroFactura[medio])
+        {
+            izquierda = medio + 1;
+        }
+        else
+        {
+            derecha = medio - 1;
+        }
+    }
+
+    MostrarFacturaNoEncontrada(comparaciones);
+}
+
+int ContarVentasPorFecha(DateTime fechaBuscada, out int comparaciones)
+{
+    int coincidencias = 0;
+    comparaciones = 0;
+
+    for (int i = 0; i < fechaVenta.Length; i++)
+    {
+        comparaciones++;
+
+        if (fechaVenta[i].Date == fechaBuscada.Date)
+        {
+            coincidencias++;
+        }
+    }
+
+    return coincidencias;
+}
+
+int CalcularTotalVenta(int indice)
+{
+    int indiceProducto = BuscarIndiceProducto(codigoProducto[indice]);
+
+    if (indiceProducto < 0)
+    {
+        return 0;
+    }
+
+    return precioUnitario[indiceProducto] * cantidadVendida[indice];
 }
 
 void ConsultarVentasPorFecha(DateTime fechaBuscada)
 {
-    throw new NotImplementedException();
+    if (!VentasSonConsistentes())
+    {
+        Console.WriteLine("Error: los datos de ventas no son válidos.\n");
+        return;
+    }
+
+    int coincidencias = ContarVentasPorFecha(fechaBuscada, out int comparaciones);
+
+    if (coincidencias == 0)
+    {
+        Console.WriteLine($"\nNo se encontraron ventas el {fechaBuscada:dd/MM/yyyy}");
+        Console.WriteLine($"Comparaciones realizadas: {comparaciones}\n");
+        return;
+    }
+
+    Console.WriteLine($"\nVENTAS DEL {fechaBuscada:dd/MM/yyyy}");
+    MostrarEncabezadoVentas();
+
+    int totalDelDia = 0;
+
+    for (int i = 0; i < fechaVenta.Length; i++)
+    {
+        if (fechaVenta[i].Date == fechaBuscada.Date)
+        {
+            MostrarFilaVenta(i);
+            totalDelDia += CalcularTotalVenta(i);
+        }
+    }
+
+    Console.WriteLine($"\nVentas encontradas: {coincidencias}");
+    Console.WriteLine($"Total vendido en el día: ${totalDelDia}");
+    Console.WriteLine($"Comparaciones realizadas: {comparaciones}\n");
 }
 
 void CompararEficienciaBusquedas()
