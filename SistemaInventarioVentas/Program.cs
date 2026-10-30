@@ -14,6 +14,10 @@ string[] codigoProducto = { "P101", "P105", "P102", "P108", "P103", "P101", "P10
 int[] cantidadVendida = { 2, 1, 1, 3, 2, 5, 1, 2 };
 DateTime[] fechaVenta = { new DateTime(2026, 10, 24), new DateTime(2026, 10, 20), new DateTime(2026, 10, 22), new DateTime(2026, 10, 21), new DateTime(2026, 10, 24), new DateTime(2026, 10, 20), new DateTime(2026, 10, 23), new DateTime(2026, 10, 22) };
 
+//Copias del orden original (para la comparación de eficiencia)
+string[] codigoOriginal = (string[])codigo.Clone();
+int[] facturaOriginal = (int[])numeroFactura.Clone();
+
 string opcion;
 
 do
@@ -508,5 +512,195 @@ void ConsultarVentasPorFecha(DateTime fechaBuscada)
 
 void CompararEficienciaBusquedas()
 {
-    throw new NotImplementedException();
+    // Casos de prueba: inicio y final del orden ORIGINAL, e inexistente
+    string prodInicio = codigoOriginal[0];
+    string prodFinal = codigoOriginal[codigoOriginal.Length - 1];
+    string prodInexistente = "P999";
+
+    int factInicio = facturaOriginal[0];
+    int factFinal = facturaOriginal[facturaOriginal.Length - 1];
+    int factInexistente = 9999;
+
+    // La búsqueda binaria trabaja sobre copias ordenadas (no altera los arreglos del programa)
+    string[] codigosOrdenados = (string[])codigoOriginal.Clone();
+    OrdenarTextoBurbuja(codigosOrdenados);
+
+    int[] facturasOrdenadas = (int[])facturaOriginal.Clone();
+    OrdenarEnteroBurbuja(facturasOrdenadas);
+
+    Console.WriteLine("\n========== COMPARACIÓN DE EFICIENCIA DE BÚSQUEDAS ==========");
+
+    // ---------- PRODUCTOS ----------
+    Console.WriteLine($"\nPRODUCTOS (n = {codigoOriginal.Length})");
+    MostrarEncabezadoComparacion();
+    MostrarFilaComparacionTexto("a) Inicio", prodInicio, codigoOriginal, codigosOrdenados);
+    MostrarFilaComparacionTexto("b) Final", prodFinal, codigoOriginal, codigosOrdenados);
+    MostrarFilaComparacionTexto("c) Inexistente", prodInexistente, codigoOriginal, codigosOrdenados);
+
+    // ---------- FACTURAS ----------
+    Console.WriteLine($"\nFACTURAS (n = {facturaOriginal.Length})");
+    MostrarEncabezadoComparacion();
+    MostrarFilaComparacionEntero("a) Inicio", factInicio, facturaOriginal, facturasOrdenadas);
+    MostrarFilaComparacionEntero("b) Final", factFinal, facturaOriginal, facturasOrdenadas);
+    MostrarFilaComparacionEntero("c) Inexistente", factInexistente, facturaOriginal, facturasOrdenadas);
+
+    MostrarAnalisisEficiencia();
+}
+
+void MostrarEncabezadoComparacion()
+{
+    string linea = new string('=', 70);
+    Console.WriteLine(linea);
+    Console.WriteLine($"{"Caso",-18}{"Buscado",-12}{"Lineal",-10}{"Binaria",-10}{"Resultado",-12}");
+    Console.WriteLine(linea);
+}
+
+void MostrarFilaComparacionTexto(string caso, string buscado, string[] original, string[] ordenado)
+{
+    int lineal = ContarComparacionesLinealTexto(original, buscado, out bool encontrado);
+    int binaria = ContarComparacionesBinariaTexto(ordenado, buscado, out _);
+
+    Console.WriteLine($"{caso,-18}{buscado,-12}{lineal,-10}{binaria,-10}{(encontrado ? "Encontrado" : "No existe"),-12}");
+}
+
+void MostrarFilaComparacionEntero(string caso, int buscado, int[] original, int[] ordenado)
+{
+    int lineal = ContarComparacionesLinealEntero(original, buscado, out bool encontrado);
+    int binaria = ContarComparacionesBinariaEntero(ordenado, buscado, out _);
+
+    Console.WriteLine($"{caso,-18}{buscado,-12}{lineal,-10}{binaria,-10}{(encontrado ? "Encontrado" : "No existe"),-12}");
+}
+
+// ---------- Búsquedas que solo cuentan comparaciones ----------
+int ContarComparacionesLinealTexto(string[] datos, string objetivo, out bool encontrado)
+{
+    int comparaciones = 0;
+    encontrado = false;
+
+    for (int i = 0; i < datos.Length; i++)
+    {
+        comparaciones++;
+        if (datos[i] == objetivo)
+        {
+            encontrado = true;
+            break;
+        }
+    }
+    return comparaciones;
+}
+
+int ContarComparacionesBinariaTexto(string[] datosOrdenados, string objetivo, out bool encontrado)
+{
+    int izquierda = 0, derecha = datosOrdenados.Length - 1, comparaciones = 0;
+    encontrado = false;
+
+    while (izquierda <= derecha)
+    {
+        comparaciones++;
+        int medio = (izquierda + derecha) / 2;
+
+        if (datosOrdenados[medio] == objetivo)
+        {
+            encontrado = true;
+            break;
+        }
+
+        if (string.Compare(objetivo, datosOrdenados[medio]) > 0)
+            izquierda = medio + 1;
+        else
+            derecha = medio - 1;
+    }
+    return comparaciones;
+}
+
+int ContarComparacionesLinealEntero(int[] datos, int objetivo, out bool encontrado)
+{
+    int comparaciones = 0;
+    encontrado = false;
+
+    for (int i = 0; i < datos.Length; i++)
+    {
+        comparaciones++;
+        if (datos[i] == objetivo)
+        {
+            encontrado = true;
+            break;
+        }
+    }
+    return comparaciones;
+}
+
+int ContarComparacionesBinariaEntero(int[] datosOrdenados, int objetivo, out bool encontrado)
+{
+    int izquierda = 0, derecha = datosOrdenados.Length - 1, comparaciones = 0;
+    encontrado = false;
+
+    while (izquierda <= derecha)
+    {
+        comparaciones++;
+        int medio = (izquierda + derecha) / 2;
+
+        if (datosOrdenados[medio] == objetivo)
+        {
+            encontrado = true;
+            break;
+        }
+
+        if (objetivo > datosOrdenados[medio])
+            izquierda = medio + 1;
+        else
+            derecha = medio - 1;
+    }
+    return comparaciones;
+}
+
+// ---------- Ordenamiento (Bubble Sort) sobre copias ----------
+void OrdenarTextoBurbuja(string[] datos)
+{
+    for (int i = 0; i < datos.Length - 1; i++)
+    {
+        for (int j = 0; j < datos.Length - 1 - i; j++)
+        {
+            if (string.Compare(datos[j], datos[j + 1]) > 0)
+            {
+                string aux = datos[j];
+                datos[j] = datos[j + 1];
+                datos[j + 1] = aux;
+            }
+        }
+    }
+}
+
+void OrdenarEnteroBurbuja(int[] datos)
+{
+    for (int i = 0; i < datos.Length - 1; i++)
+    {
+        for (int j = 0; j < datos.Length - 1 - i; j++)
+        {
+            if (datos[j] > datos[j + 1])
+            {
+                int aux = datos[j];
+                datos[j] = datos[j + 1];
+                datos[j + 1] = aux;
+            }
+        }
+    }
+}
+
+// ---------- Explicación teórica ----------
+void MostrarAnalisisEficiencia()
+{
+    Console.WriteLine("\n---------- ANÁLISIS ----------");
+    Console.WriteLine("¿Por qué varía el número de comparaciones?");
+    Console.WriteLine("- Lineal: recorre el arreglo en su orden original, así que depende de la posición");
+    Console.WriteLine("  del dato: 1 comparación si está al inicio, n si está al final o no existe.");
+    Console.WriteLine("- Binaria: descarta la mitad de los datos en cada paso, así que depende de dónde");
+    Console.WriteLine("  caiga el dato respecto al punto medio, no de su posición original.");
+    Console.WriteLine("\n¿Qué ventaja ofrece la búsqueda binaria?");
+    Console.WriteLine("- En el peor caso necesita cerca de log2(n) comparaciones (con n = 10, máximo 4),");
+    Console.WriteLine("  frente a n de la lineal. La diferencia crece al aumentar los datos:");
+    Console.WriteLine("  con 1,000,000 de registros, ~20 comparaciones contra 1,000,000.");
+    Console.WriteLine("- Condición: los datos deben estar ordenados. El ordenamiento tiene un costo");
+    Console.WriteLine("  (Bubble Sort es O(n²)), que se compensa cuando se hacen muchas búsquedas.");
+    Console.WriteLine("- Con pocos datos o una sola consulta, la lineal puede ser igual de práctica.\n");
 }
